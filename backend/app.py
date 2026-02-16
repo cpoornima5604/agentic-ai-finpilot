@@ -1,85 +1,37 @@
 from flask import Flask, request, jsonify
-from onboard import *
 from flask_cors import CORS
-import subprocess
 import re
-from jgaad_ai_agent_backup import jgaad_chat_with_gemini
-import gemini_fin_path
-from flask import Flask
+import os
+
+from agent import run_agent
+from gemini_fin_path import finpilot_gemini_chat
 
 app = Flask(__name__)
 CORS(app)
 
-@app.route('/', methods=['GET'])
+@app.route("/", methods=["GET"])
 def home():
-    return jsonify("HI")
+    return jsonify({"status": "FinPilot backend running"})
 
-# =================== DYNAMIC APIS ===================
-@app.route('/agent', methods=['POST'])
+@app.route("/agent", methods=["POST"])
 def agent():
-    inp = request.form.get('input')
-    # response = get_agent_response(inp)
-    if inp:
-        # run in terminal
-        print(inp)
-        process = subprocess.Popen(['python', 'agent.py', inp], 
-                     stdout=subprocess.PIPE, 
-                     stderr=subprocess.PIPE,
-                     universal_newlines=True)
-        
-        output = []
-        # Stream output in real-time
-        while True:
-            line = process.stdout.readline()
-            if not line and process.poll() is not None:
-                break
-            if line:
-                print(line.strip())  # Print to terminal in real-time
-                output.append(line)
-        
-        output_str = ''.join(output)
-        process.wait()
+    inp = request.form.get("input")
+    if not inp:
+        return jsonify({"error": "No input"}), 400
 
-        # Use regex to extract the response between <Response> tags
-        final_answer = re.search(r'<Response>(.*?)</Response>', output_str, re.DOTALL)
-        if final_answer:
-            final_answer = final_answer.group(1).strip()
-        else:
-            final_answer = jgaad_chat_with_gemini(inp, output_str)
-        # response = get_agent_response(inp)
-        return jsonify({'output': final_answer, 'thought': output_str})
-    return "no input"
+    output = run_agent(inp)
+    match = re.search(r"<Response>(.*?)</Response>", output, re.DOTALL)
 
-@app.route('/ai-financial-path', methods=['POST'])
+    final_answer = match.group(1).strip() if match else output
+    return jsonify({"output": final_answer})
+
+@app.route("/ai-financial-path", methods=["POST"])
 def ai_financial_path():
-    if 'input' not in request.form:
-        print(request.form['input'])
-        return jsonify({'error': 'No input provided'}), 400
-        
-    input_text = request.form.get('input','')
-    risk = request.form.get('risk', 'conservative')
-    print(input_text)
-    try:
-        response = gemini_fin_path.get_gemini_response(input_text, risk)
-        return jsonify(response)
-    except Exception as e:
-        return jsonify({'error': 'Something went wrong'}), 500
+    input_text = request.form.get("input", "")
+    risk = request.form.get("risk", "conservative")
 
-# =================== STATIC APIS ===================
-@app.route('/auto-bank-data', methods=['get'])
-def AutoBankData():
-    return bank_data
-
-@app.route('/auto-mf-data', methods=['get'])
-def AutoMFData():
-    return mf_data
-
-
-# =================== CONENCTION APIS ===================
-
-# =================== BOTS ===================
-
-import os
+    response = finpilot_gemini_chat(input_text, risk)
+    return jsonify({"response": response})
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 10000))
