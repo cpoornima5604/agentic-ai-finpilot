@@ -1,0 +1,14 @@
+Flask
+Flask-Cors
+python-dotenv
+langchain
+langchain_ollama
+langchain_google_genai
+langchain_community
+google-generativeai
+flask
+google-genai
+python-dotenv
+gunicorn
+requests
+
