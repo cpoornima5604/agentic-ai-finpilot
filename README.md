@@ -42,7 +42,3 @@ This project demonstrates the practical application of **Agentic AI**, **LLM orc
 ### LLM Providers
 - Groq (LLaMA-3-70B)
 - Google Gemini
-
-
-## 📂 Project Structure
-
