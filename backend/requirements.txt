@@ -7,8 +7,9 @@ langchain_google_genai
 langchain_community
 google-generativeai
 flask
+gunicorn
 google-genai
 python-dotenv
-gunicorn
 requests
+
 
