@@ -5,6 +5,7 @@ import subprocess
 import re
 from jgaad_ai_agent_backup import jgaad_chat_with_gemini
 import gemini_fin_path
+from flask import Flask
 
 app = Flask(__name__)
 CORS(app)
@@ -78,8 +79,8 @@ def AutoMFData():
 
 # =================== BOTS ===================
 
-if __name__ == "__main__":
-    app.run(debug=True)
+import os
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000)
+    port = int(os.environ.get("PORT", 10000))
+    app.run(host="0.0.0.0", port=port)
