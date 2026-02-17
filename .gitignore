@@ -10,3 +10,7 @@ venv/
 
 # OS
 .DS_Store
+venv/
+__pycache__/
+.env
+*.log
