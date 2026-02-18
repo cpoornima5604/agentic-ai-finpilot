@@ -1,8 +1,8 @@
-flask
-flask-cors
-gunicorn
-google-genai
+Flask
+Flask-Cors
 python-dotenv
-requests
 langchain
-langgraph
+langchain_ollama
+langchain_google_genai
+langchain_community
+google-generativeai

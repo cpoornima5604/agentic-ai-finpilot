@@ -1,73 +1,53 @@
 import os
+import google.generativeai as genai
 from dotenv import load_dotenv
-from google import genai
-from google.genai import types
 
-# Load environment variables
 load_dotenv()
 
-API_KEY = os.getenv("GEMINI_API_KEY")
-if not API_KEY:
-    raise ValueError("GEMINI_API_KEY not found in environment variables")
+genai.configure(api_key=os.environ["GEMINI_API_KEY"])
 
-# Create Gemini client
-client = genai.Client(api_key=API_KEY)
+# Create the model
+generation_config = {
+  "temperature": 1,
+  "top_p": 0.95,
+  "top_k": 40,
+  "max_output_tokens": 8192,
+  "response_mime_type": "text/plain",
+}
 
-# System instruction (financial advisor persona)
-SYSTEM_INSTRUCTION = """
-You are a knowledgeable personal financial advisor dedicated to helping individuals
-navigate their financial journey.
+model = genai.GenerativeModel(
+  model_name="gemini-pro",
+  generation_config=generation_config,
+  system_instruction=f"""You are a knowledgeable personal financial advisor dedicated to helping individuals navigate their financial journey. Focus on providing guidance on budgeting, investing, retirement planning, debt management, and wealth building strategies. Be precise and practical in your advice while considering individual circumstances.
 
-Focus areas:
+Key areas of expertise:
 - Budgeting and expense tracking
-- Investment strategies
+- Investment strategies and portfolio management
 - Retirement planning
-- Debt management
-- Tax planning
-- Emergency funds
+- Debt management and elimination
+- Tax planning considerations
+- Emergency fund planning
 - Risk management and insurance
 
-Provide practical, ethical, and realistic advice.
-If research data is provided, use it carefully.
-"""
+Provide balanced, ethical financial advice and acknowledge when certain situations may require consultation with other financial professionals.
 
-# Generation configuration
-GEN_CONFIG = types.GenerateContentConfig(
-    temperature=1.0,
-    top_p=0.95,
-    top_k=40,
-    max_output_tokens=8192,
-    system_instruction=SYSTEM_INSTRUCTION,
+If the user provides you the research data then use it for your response.
+  """,
 )
 
-def jgaad_chat_with_gemini(query: str, research: str = "") -> str:
-    """
-    Agentic Gemini chat function for financial advice
-    """
+chat_session = model.start_chat(
+  history=[
+  ]
+)
 
-    prompt = f"""
-    Research Context (if any):
-    {research}
-
-    User Question:
-    {query}
-
-    Respond with clear, structured financial advice.
-    """
-
-    response = client.models.generate_content(
-        model="gemini-1.5-flash",
-        contents=prompt,
-        config=GEN_CONFIG
-    )
-
+def jgaad_chat_with_gemini(query, research=''):
+    global chat_session
+    response = chat_session.send_message(f'{research} \nBased on the above research answer the following query properly\n {query}')
     return response.text
-
-
-# ---------------- TEST ----------------
+  
 if __name__ == "__main__":
-    test_query = "Should I invest in IT companies now?"
-    print("Test Query:", test_query)
-
-    answer = jgaad_chat_with_gemini(test_query)
-    print("\nGemini Response:\n", answer)
+  # Sample test query
+  test_query = "Research that should i invest in IT-companies now?"
+  print("Test Query:", test_query)
+  response = jgaad_chat_with_gemini(test_query)
+  print("Response:", response)
